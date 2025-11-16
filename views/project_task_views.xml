@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Inherit and extend project.task form view -->
+    <record id="view_task_form_workorder" model="ir.ui.view">
+        <field name="name">project.task.form.workorder</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <!-- Add workorder checkbox after name field -->
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="is_workorder"/>
+            </xpath>
+
+            <!-- Add smart button for diary -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_diary"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-book"
+                        invisible="not is_workorder">
+                    <field name="diary_count" widget="statinfo" string="Дневник"/>
+                </button>
+            </xpath>
+
+            <!-- Add Workorder page/tab -->
+            <xpath expr="//page[@name='description_page']" position="after">
+                <page string="Работен Налог" name="workorder_page" invisible="not is_workorder">
+                    <group>
+                        <group string="Основни информации">
+                            <field name="workorder_type"/>
+                            <field name="workorder_state" widget="statusbar" statusbar_visible="draft,planned,in_progress,completed"/>
+                            <field name="work_location"/>
+                            <field name="work_location_notes"/>
+                        </group>
+                        <group string="Клиент">
+                            <field name="customer_contact"/>
+                            <field name="customer_phone" widget="phone"/>
+                        </group>
+                    </group>
+
+                    <group string="Тим и Ресурси">
+                        <group>
+                            <field name="team_leader_id"/>
+                            <field name="worker_ids" widget="many2many_tags"/>
+                            <field name="total_workers"/>
+                        </group>
+                        <group>
+                            <field name="primary_vehicle_id"/>
+                            <field name="vehicle_ids" widget="many2many_tags"/>
+                        </group>
+                    </group>
+
+                    <group string="Опрема и Материјали">
+                        <div colspan="2">
+                            <button name="action_create_stock_request"
+                                    string="Барај од магацин"
+                                    type="object"
+                                    class="btn-primary mb-2"
+                                    icon="fa-truck"
+                                    invisible="not equipment_line_ids"/>
+                            <button name="action_return_equipment"
+                                    string="Врати опрема"
+                                    type="object"
+                                    class="btn-warning mb-2 ms-2"
+                                    icon="fa-undo"
+                                    invisible="equipment_all_returned or not equipment_line_ids"/>
+                            <field name="equipment_all_returned" invisible="1"/>
+                            <span class="badge bg-success ms-2" invisible="not equipment_all_returned or not equipment_line_ids">Сè вратено</span>
+                            <span class="badge bg-warning ms-2" invisible="equipment_all_returned or not equipment_line_ids">Има невратена опрема</span>
+                        </div>
+                        <field name="equipment_line_ids" nolabel="1" colspan="2">
+                            <list editable="bottom">
+                                <field name="sequence" widget="handle"/>
+                                <field name="product_id"/>
+                                <field name="qty_issued"/>
+                                <field name="qty_used"/>
+                                <field name="qty_returned"/>
+                                <field name="qty_remaining"/>
+                                <field name="state" widget="badge"
+                                       decoration-info="state == 'draft'"
+                                       decoration-primary="state == 'issued'"
+                                       decoration-warning="state == 'partial_return'"
+                                       decoration-success="state == 'returned'"
+                                       decoration-muted="state == 'consumed'"/>
+                                <field name="serial_number" optional="hide"/>
+                                <field name="notes" optional="hide"/>
+                                <field name="picking_id" optional="hide"/>
+                            </list>
+                        </field>
+                        <field name="material_notes" nolabel="1" colspan="2" placeholder="Забелешки за потребни материјали..."/>
+                    </group>
+
+                    <group string="Временски План">
+                        <group>
+                            <field name="planned_start"/>
+                            <field name="planned_end"/>
+                            <field name="estimated_hours"/>
+                        </group>
+                        <group>
+                            <field name="actual_start"/>
+                            <field name="actual_end"/>
+                        </group>
+                    </group>
+
+                    <group string="Опис на Работа">
+                        <field name="work_description" nolabel="1" colspan="2"/>
+                    </group>
+
+                    <group string="Забелешки по Завршување" invisible="workorder_state != 'completed'">
+                        <field name="completion_notes" nolabel="1" colspan="2"/>
+                    </group>
+                </page>
+            </xpath>
+
+            <!-- Add action buttons in header -->
+            <xpath expr="//header" position="inside">
+                <button name="action_plan_work"
+                        string="Планирај"
+                        type="object"
+                        class="btn-primary"
+                        invisible="not is_workorder or workorder_state != 'draft'"/>
+                <button name="action_start_work"
+                        string="Започни работа"
+                        type="object"
+                        class="btn-primary"
+                        invisible="not is_workorder or workorder_state not in ['planned', 'on_hold']"/>
+                <button name="action_pause_work"
+                        string="Паузирај"
+                        type="object"
+                        invisible="not is_workorder or workorder_state != 'in_progress'"/>
+                <button name="action_complete_work"
+                        string="Заврши"
+                        type="object"
+                        class="btn-success"
+                        invisible="not is_workorder or workorder_state != 'in_progress'"/>
+                <button name="action_cancel_work"
+                        string="Откажи"
+                        type="object"
+                        invisible="not is_workorder or workorder_state in ['completed', 'cancelled']"/>
+                <button name="action_reset_to_draft"
+                        string="Врати во нацрт"
+                        type="object"
+                        invisible="not is_workorder or workorder_state not in ['cancelled', 'on_hold']"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Inherit and extend project.task tree/list view -->
+    <record id="view_task_tree_workorder" model="ir.ui.view">
+        <field name="name">project.task.tree.workorder</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_tree2"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="is_workorder" optional="hide"/>
+                <field name="workorder_type" optional="show" invisible="not is_workorder"/>
+                <field name="workorder_state" optional="show" invisible="not is_workorder" widget="badge"
+                       decoration-info="workorder_state == 'draft'"
+                       decoration-warning="workorder_state == 'planned'"
+                       decoration-primary="workorder_state == 'in_progress'"
+                       decoration-muted="workorder_state == 'on_hold'"
+                       decoration-success="workorder_state == 'completed'"
+                       decoration-danger="workorder_state == 'cancelled'"/>
+                <field name="team_leader_id" optional="show" invisible="not is_workorder"/>
+                <field name="total_workers" optional="show" invisible="not is_workorder"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Workorder specific list view -->
+    <record id="view_workorder_tree" model="ir.ui.view">
+        <field name="name">eskon.workorder.tree</field>
+        <field name="model">project.task</field>
+        <field name="arch" type="xml">
+            <list string="Работни Налози" decoration-info="workorder_state == 'draft'"
+                  decoration-warning="workorder_state == 'planned'"
+                  decoration-primary="workorder_state == 'in_progress'"
+                  decoration-muted="workorder_state == 'on_hold'"
+                  decoration-success="workorder_state == 'completed'"
+                  decoration-danger="workorder_state == 'cancelled'">
+                <field name="name"/>
+                <field name="project_id"/>
+                <field name="workorder_type"/>
+                <field name="workorder_state" widget="badge"/>
+                <field name="team_leader_id"/>
+                <field name="total_workers"/>
+                <field name="planned_start"/>
+                <field name="planned_end"/>
+                <field name="work_location"/>
+                <field name="partner_id" string="Клиент"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Workorder Kanban View -->
+    <record id="view_workorder_kanban" model="ir.ui.view">
+        <field name="name">eskon.workorder.kanban</field>
+        <field name="model">project.task</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="workorder_state" class="o_kanban_small_column">
+                <field name="name"/>
+                <field name="workorder_state"/>
+                <field name="workorder_type"/>
+                <field name="team_leader_id"/>
+                <field name="total_workers"/>
+                <field name="planned_start"/>
+                <field name="partner_id"/>
+                <field name="color"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="oe_kanban_card oe_kanban_global_click">
+                            <div class="oe_kanban_content">
+                                <div class="o_kanban_record_top">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <field name="name"/>
+                                        </strong>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_record_body">
+                                    <div>
+                                        <strong>Тип:</strong> <field name="workorder_type"/>
+                                    </div>
+                                    <div t-if="record.team_leader_id.value">
+                                        <strong>Одговорен:</strong> <field name="team_leader_id"/>
+                                    </div>
+                                    <div t-if="record.total_workers.value">
+                                        <strong>Работници:</strong> <field name="total_workers"/>
+                                    </div>
+                                    <div t-if="record.planned_start.value">
+                                        <strong>Почеток:</strong> <field name="planned_start"/>
+                                    </div>
+                                    <div t-if="record.partner_id.value">
+                                        <strong>Клиент:</strong> <field name="partner_id"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Search View for Workorders -->
+    <record id="view_workorder_search" model="ir.ui.view">
+        <field name="name">eskon.workorder.search</field>
+        <field name="model">project.task</field>
+        <field name="arch" type="xml">
+            <search string="Работни Налози">
+                <field name="name"/>
+                <field name="project_id"/>
+                <field name="partner_id"/>
+                <field name="team_leader_id"/>
+                <field name="work_location"/>
+                <filter string="Нацрт" name="draft" domain="[('workorder_state', '=', 'draft')]"/>
+                <filter string="Планирани" name="planned" domain="[('workorder_state', '=', 'planned')]"/>
+                <filter string="Во тек" name="in_progress" domain="[('workorder_state', '=', 'in_progress')]"/>
+                <filter string="Паузирани" name="on_hold" domain="[('workorder_state', '=', 'on_hold')]"/>
+                <filter string="Завршени" name="completed" domain="[('workorder_state', '=', 'completed')]"/>
+                <filter string="Откажани" name="cancelled" domain="[('workorder_state', '=', 'cancelled')]"/>
+                <separator/>
+                <filter string="Инсталации" name="installation" domain="[('workorder_type', '=', 'installation')]"/>
+                <filter string="Одржување" name="maintenance" domain="[('workorder_type', '=', 'maintenance')]"/>
+                <filter string="Сервис" name="service" domain="[('workorder_type', '=', 'service')]"/>
+                <separator/>
+                <group expand="0" string="Групирај по">
+                    <filter string="Статус" name="group_state" context="{'group_by': 'workorder_state'}"/>
+                    <filter string="Тип" name="group_type" context="{'group_by': 'workorder_type'}"/>
+                    <filter string="Одговорен" name="group_leader" context="{'group_by': 'team_leader_id'}"/>
+                    <filter string="Проект" name="group_project" context="{'group_by': 'project_id'}"/>
+                    <filter string="Клиент" name="group_partner" context="{'group_by': 'partner_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action for Workorders -->
+    <record id="action_workorder_all" model="ir.actions.act_window">
+        <field name="name">Работни Налози</field>
+        <field name="res_model">project.task</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('is_workorder', '=', True)]</field>
+        <field name="context">{
+            'default_is_workorder': True,
+            'search_default_in_progress': 1
+        }</field>
+        <field name="search_view_id" ref="view_workorder_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Креирај нов работен налог
+            </p>
+            <p>
+                Работните налози ви овозможуваат да планирате и следите
+                работи на терен, да доделувате тимови и возила, и да
+                генерирате извештаи.
+            </p>
+        </field>
+    </record>
+
+    <!-- Specific view refs for the action -->
+    <record id="action_workorder_all_view_kanban" model="ir.actions.act_window.view">
+        <field name="sequence">1</field>
+        <field name="view_mode">kanban</field>
+        <field name="view_id" ref="view_workorder_kanban"/>
+        <field name="act_window_id" ref="action_workorder_all"/>
+    </record>
+
+    <record id="action_workorder_all_view_tree" model="ir.actions.act_window.view">
+        <field name="sequence">2</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_workorder_tree"/>
+        <field name="act_window_id" ref="action_workorder_all"/>
+    </record>
+
+</odoo>

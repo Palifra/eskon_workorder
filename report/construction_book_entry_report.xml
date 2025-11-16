@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Construction Book Entry Report Action -->
+    <record id="action_report_construction_book_entry" model="ir.actions.report">
+        <field name="name">Страница од Градежна Книга</field>
+        <field name="model">construction.book.entry</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">eskon_workorder.report_construction_book_entry</field>
+        <field name="report_file">eskon_workorder.report_construction_book_entry</field>
+        <field name="binding_model_id" ref="model_construction_book_entry"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Construction Book Entry Template -->
+    <template id="report_construction_book_entry">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-set="max_rows" t-value="29"/>
+                <t t-set="total_lines" t-value="len(doc.line_ids)"/>
+                <t t-set="num_pages" t-value="max(1, (total_lines + max_rows - 1) // max_rows)"/>
+
+                <!-- Generate a page for each chunk of 29 lines -->
+                <t t-foreach="range(num_pages)" t-as="page_idx">
+                    <div class="article" data-oe-model="construction.book.entry" t-att-data-oe-id="doc.id">
+                        <div class="page">
+                            <style>
+                                @page {
+                                    margin: 1.5cm 0.5cm 0.5cm 0.5cm;
+                                }
+                                .main-table {
+                                    width: 100%;
+                                    border-collapse: collapse;
+                                }
+                                .main-table td, .main-table th {
+                                    border: 1px solid #000;
+                                    padding: 5px;
+                                    font-size: 11px;
+                                    vertical-align: top;
+                                }
+                                .title-cell {
+                                    font-weight: bold;
+                                    text-align: center;
+                                    font-size: 14px;
+                                    background-color: #f0f0f0;
+                                }
+                                .header-row td {
+                                    background-color: #fafafa;
+                                }
+                                .work-header {
+                                    background-color: #f0f0f0;
+                                    font-weight: bold;
+                                    text-align: center;
+                                    font-size: 10px;
+                                }
+                                .num {
+                                    text-align: center;
+                                    width: 40px;
+                                }
+                                .uom {
+                                    text-align: center;
+                                    width: 70px;
+                                }
+                                .qty {
+                                    text-align: right;
+                                    width: 70px;
+                                }
+                                .signature-cell {
+                                    text-align: center;
+                                    font-size: 11px;
+                                    padding: 10px;
+                                    height: 60px;
+                                    vertical-align: top;
+                                }
+                            </style>
+
+                            <!-- Main Table with Repeating Header and Footer -->
+                            <table class="main-table">
+                                <thead>
+                                        <!-- Header Info - Repeats on every page -->
+                                        <tr class="header-row">
+                                            <td rowspan="4" class="title-cell" style="width: 12%;">
+                                                ГРАДЕЖНА<br/>КНИГА
+                                            </td>
+                                            <td colspan="4">
+                                                <strong>проект:</strong> <t t-esc="doc.project_name"/>
+                                            </td>
+                                            <td style="width: 12%;">
+                                                <strong>страна на книга</strong><br/>
+                                                <t t-esc="doc.page_number"/>
+                                                <t t-if="num_pages &gt; 1">
+                                                    (<t t-esc="page_idx + 1"/>/<t t-esc="num_pages"/>)
+                                                </t>
+                                            </td>
+                                        </tr>
+                                        <tr class="header-row">
+                                            <td colspan="2">
+                                                <strong>изведувач:</strong> <t t-esc="doc.main_contractor"/><br/>
+                                                <t t-if="doc.subcontractor">
+                                                    <strong>подизведувач:</strong> <t t-esc="doc.subcontractor"/>
+                                                </t>
+                                            </td>
+                                            <td colspan="2">
+                                                <strong>надзор:</strong> <t t-esc="doc.supervision"/>
+                                            </td>
+                                            <td>
+                                                <strong>Период:</strong><br/>
+                                                <t t-esc="doc.period_display"/>
+                                            </td>
+                                        </tr>
+                                        <tr class="header-row">
+                                            <td colspan="2">
+                                                <strong>инвеститор:</strong> <t t-esc="doc.investor"/>
+                                            </td>
+                                            <td colspan="3">
+                                            </td>
+                                        </tr>
+                                        <tr class="header-row">
+                                            <td colspan="5">
+                                                <strong>адреса и назив на градилиште:</strong>
+                                                <t t-esc="doc.site_name"/>
+                                                <t t-if="doc.site_address">
+                                                    - <t t-esc="doc.site_address"/>
+                                                </t>
+                                            </td>
+                                        </tr>
+                                        <tr class="header-row">
+                                            <td colspan="6" style="padding: 8px;">
+                                                <strong>ОПИС НА РАБОТА (Опис од понуда / договор, број на договор):</strong><br/>
+                                                <t t-esc="doc.work_description"/>
+                                                <t t-if="doc.contract_number">
+                                                    <br/>Договор бр.: <t t-esc="doc.contract_number"/>
+                                                </t>
+                                            </td>
+                                        </tr>
+                                        <!-- Column Headers -->
+                                        <tr>
+                                            <th class="work-header num">№ п/п</th>
+                                            <th class="work-header" colspan="3">
+                                                ИЗВЕДЕНА ПОЗИЦИЈА / WORKS THAT HAVE BEEN DONE<br/>
+                                                <small>ДЕТАЛИ ЗА ПОЗИЦИЈАТА / DETAILS OF WORK</small>
+                                            </th>
+                                            <th class="work-header uom">ед. мерка</th>
+                                            <th class="work-header qty">количина</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-set="start_idx" t-value="page_idx * max_rows"/>
+                                        <t t-set="end_idx" t-value="min(start_idx + max_rows, total_lines)"/>
+                                        <t t-set="lines_on_page" t-value="end_idx - start_idx"/>
+
+                                        <!-- Actual lines for this page -->
+                                        <t t-set="seq_num" t-value="start_idx + 1"/>
+                                        <t t-foreach="doc.line_ids[start_idx:end_idx]" t-as="line">
+                                            <tr>
+                                                <td class="num"><t t-esc="seq_num"/>.</td>
+                                                <td colspan="3">
+                                                    <t t-esc="line.description"/>
+                                                    <t t-if="line.details">
+                                                        <br/><small><t t-esc="line.details"/></small>
+                                                    </t>
+                                                </td>
+                                                <td class="uom"><t t-esc="line.uom"/></td>
+                                                <td class="qty"><t t-esc="line.quantity"/></td>
+                                            </tr>
+                                            <t t-set="seq_num" t-value="seq_num + 1"/>
+                                        </t>
+
+                                        <!-- Empty rows to fill up to 25 -->
+                                        <t t-if="lines_on_page &lt; max_rows">
+                                            <t t-foreach="range(max_rows - lines_on_page)" t-as="empty_row">
+                                                <tr>
+                                                    <td class="num"><t t-esc="end_idx + empty_row + 1"/>.</td>
+                                                    <td colspan="3">&#160;</td>
+                                                    <td class="uom">&#160;</td>
+                                                    <td class="qty">&#160;</td>
+                                                </tr>
+                                            </t>
+                                        </t>
+                                    </tbody>
+                                    <tfoot>
+                                        <!-- Total Row -->
+                                        <tr>
+                                            <td colspan="5" style="text-align: right;">
+                                                <strong>вкупно:</strong>
+                                            </td>
+                                            <td class="qty">
+                                                <strong><t t-esc="doc.total_quantity"/></strong>
+                                            </td>
+                                        </tr>
+                                        <!-- Signatures - Part of table footer, repeats on every page -->
+                                        <tr>
+                                            <td colspan="3" class="signature-cell" style="width: 50%;">
+                                                <strong>Потпис на изведувачот</strong><br/>
+                                                (име, презиме, потпис)<br/>
+                                                <t t-if="doc.contractor_signatory">
+                                                    <t t-esc="doc.contractor_signatory"/>
+                                                </t>
+                                            </td>
+                                            <td colspan="3" class="signature-cell" style="width: 50%;">
+                                                <strong>Потпис на надзорен инженер</strong><br/>
+                                                (име, презиме, потпис)<br/>
+                                                <t t-if="doc.supervisor_signatory">
+                                                    <t t-esc="doc.supervisor_signatory"/>
+                                                </t>
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+
+                            </div>
+                        </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

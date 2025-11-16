@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Form View -->
+    <record id="view_construction_book_entry_form" model="ir.ui.view">
+        <field name="name">construction.book.entry.form</field>
+        <field name="model">construction.book.entry</field>
+        <field name="arch" type="xml">
+            <form string="Страница од Градежна Книга">
+                <header>
+                    <button name="action_confirm"
+                            string="Потврди"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_sign"
+                            string="Потпиши"
+                            type="object"
+                            class="btn-success"
+                            invisible="state != 'confirmed'"/>
+                    <button name="action_reset_draft"
+                            string="Врати во нацрт"
+                            type="object"
+                            invisible="state == 'draft'"
+                            groups="project.group_project_manager"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,signed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                        <h3>
+                            Страна бр. <field name="page_number" class="oe_inline"/>
+                        </h3>
+                    </div>
+
+                    <group>
+                        <group string="Проект">
+                            <field name="book_id"/>
+                            <field name="project_name"/>
+                        </group>
+                        <group string="Период">
+                            <field name="period_start"/>
+                            <field name="period_end"/>
+                            <field name="period_display"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="Изведувачи">
+                            <field name="main_contractor" placeholder="Главен изведувач"/>
+                            <field name="subcontractor" placeholder="Подизведувач (ако има)"/>
+                            <field name="supervision" placeholder="Надзор"/>
+                        </group>
+                        <group string="Градилиште">
+                            <field name="investor"/>
+                            <field name="site_name" placeholder="Назив"/>
+                            <field name="site_address" placeholder="Адреса"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Работни позиции" name="work_positions">
+                            <group string="Опис на работа">
+                                <field name="work_description" nolabel="1" colspan="2"
+                                       placeholder="Опис од понуда / договор, број на договор"/>
+                                <field name="contract_number"/>
+                            </group>
+
+                            <field name="line_ids" nolabel="1">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="location" optional="show"/>
+                                    <field name="description"/>
+                                    <field name="details" optional="hide"/>
+                                    <field name="product_id" optional="hide"/>
+                                    <field name="uom"/>
+                                    <field name="quantity"/>
+                                    <field name="total"/>
+                                    <field name="notes" optional="hide"/>
+                                </list>
+                            </field>
+
+                            <group>
+                                <group>
+                                    <field name="line_count"/>
+                                </group>
+                                <group>
+                                    <field name="total_quantity" class="oe_highlight"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Потписи" name="signatures">
+                            <group>
+                                <group string="Изведувач">
+                                    <field name="contractor_signatory" placeholder="Име, презиме"/>
+                                    <field name="contractor_signed_date"/>
+                                </group>
+                                <group string="Надзорен инженер">
+                                    <field name="supervisor_signatory" placeholder="Име, презиме"/>
+                                    <field name="supervisor_signed_date"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Забелешки" name="notes">
+                            <field name="notes" nolabel="1" placeholder="Дополнителни забелешки..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- List View -->
+    <record id="view_construction_book_entry_list" model="ir.ui.view">
+        <field name="name">construction.book.entry.list</field>
+        <field name="model">construction.book.entry</field>
+        <field name="arch" type="xml">
+            <list string="Страници"
+                  decoration-info="state == 'draft'"
+                  decoration-warning="state == 'confirmed'"
+                  decoration-success="state == 'signed'">
+                <field name="name"/>
+                <field name="page_number"/>
+                <field name="book_id"/>
+                <field name="period_display"/>
+                <field name="main_contractor"/>
+                <field name="line_count"/>
+                <field name="total_quantity"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'confirmed'"
+                       decoration-success="state == 'signed'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_construction_book_entry_search" model="ir.ui.view">
+        <field name="name">construction.book.entry.search</field>
+        <field name="model">construction.book.entry</field>
+        <field name="arch" type="xml">
+            <search string="Страници">
+                <field name="name"/>
+                <field name="book_id"/>
+                <field name="main_contractor"/>
+                <field name="subcontractor"/>
+                <filter string="Нацрт" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Потврдени" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter string="Потпишани" name="signed" domain="[('state', '=', 'signed')]"/>
+                <separator/>
+                <group expand="0" string="Групирај по">
+                    <filter string="Градежна книга" name="group_book" context="{'group_by': 'book_id'}"/>
+                    <filter string="Статус" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Период" name="group_period" context="{'group_by': 'period_start:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_construction_book_entry" model="ir.actions.act_window">
+        <field name="name">Страници од Градежни Книги</field>
+        <field name="res_model">construction.book.entry</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{}</field>
+        <field name="search_view_id" ref="view_construction_book_entry_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Креирај нова страница
+            </p>
+            <p>
+                Страница од градежна книга содржи детални записи за
+                извршените работи со количини и единици мерка.
+            </p>
+        </field>
+    </record>
+
+    <!-- Sequence -->
+    <record id="seq_construction_book_entry" model="ir.sequence">
+        <field name="name">Construction Book Entry Sequence</field>
+        <field name="code">construction.book.entry</field>
+        <field name="prefix">ГКС-%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+    </record>
+
+</odoo>

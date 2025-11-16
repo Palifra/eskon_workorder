@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Form View -->
+    <record id="view_construction_diary_form" model="ir.ui.view">
+        <field name="name">construction.diary.form</field>
+        <field name="model">construction.diary</field>
+        <field name="arch" type="xml">
+            <form string="Градежен Дневник">
+                <header>
+                    <button name="action_confirm"
+                            string="Потврди"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve"
+                            string="Одобри"
+                            type="object"
+                            class="btn-success"
+                            invisible="state != 'confirmed'"/>
+                    <button name="action_reset_to_draft"
+                            string="Врати во нацрт"
+                            type="object"
+                            invisible="state not in ['confirmed', 'approved']"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,approved"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Основни информации">
+                            <field name="task_id"/>
+                            <field name="project_id"/>
+                            <field name="date"/>
+                            <field name="recorded_by_id"/>
+                        </group>
+                        <group string="Временски услови">
+                            <field name="weather"/>
+                            <field name="temperature_min"/>
+                            <field name="temperature_max"/>
+                        </group>
+                    </group>
+
+                    <group string="Работна смена">
+                        <group>
+                            <field name="shift_start" widget="float_time"/>
+                            <field name="shift_end" widget="float_time"/>
+                            <field name="work_hours" widget="float_time"/>
+                        </group>
+                        <group>
+                            <field name="worker_ids" widget="many2many_tags"/>
+                            <field name="workers_count"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Извршена работа" name="work">
+                            <field name="work_description" placeholder="Опишете ги работите извршени денес..."/>
+                        </page>
+
+                        <page string="Материјали и опрема" name="materials">
+                            <group>
+                                <field name="materials_used" placeholder="Листа на употребени материјали..."/>
+                            </group>
+                            <group>
+                                <field name="equipment_used" placeholder="Опрема и алати користени..."/>
+                            </group>
+                        </page>
+
+                        <page string="Безбедност" name="safety">
+                            <group>
+                                <field name="safety_notes" placeholder="Безбедносни мерки и забелешки..."/>
+                            </group>
+                            <group>
+                                <field name="incidents"/>
+                                <field name="incident_description"
+                                       invisible="not incidents"
+                                       placeholder="Опис на инцидентот..."/>
+                            </group>
+                        </page>
+
+                        <page string="Инспекции" name="inspections">
+                            <group>
+                                <field name="inspection_performed"/>
+                                <field name="inspector_name" invisible="not inspection_performed"/>
+                                <field name="inspection_notes"
+                                       invisible="not inspection_performed"
+                                       placeholder="Забелешки од инспекцијата..."/>
+                            </group>
+                        </page>
+
+                        <page string="Фотографии" name="photos">
+                            <field name="photo_ids" widget="many2many_binary"/>
+                        </page>
+
+                        <page string="Забелешки" name="notes">
+                            <field name="notes" placeholder="Дополнителни забелешки..."/>
+                            <field name="approved_by_id" invisible="state != 'approved'"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- List View -->
+    <record id="view_construction_diary_list" model="ir.ui.view">
+        <field name="name">construction.diary.list</field>
+        <field name="model">construction.diary</field>
+        <field name="arch" type="xml">
+            <list string="Градежен Дневник"
+                  decoration-info="state == 'draft'"
+                  decoration-warning="state == 'confirmed'"
+                  decoration-success="state == 'approved'">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="task_id"/>
+                <field name="weather"/>
+                <field name="workers_count"/>
+                <field name="work_hours" widget="float_time"/>
+                <field name="incidents"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'confirmed'"
+                       decoration-success="state == 'approved'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Calendar View -->
+    <record id="view_construction_diary_calendar" model="ir.ui.view">
+        <field name="name">construction.diary.calendar</field>
+        <field name="model">construction.diary</field>
+        <field name="arch" type="xml">
+            <calendar string="Градежен Дневник" date_start="date" color="task_id" mode="month">
+                <field name="name"/>
+                <field name="task_id"/>
+                <field name="workers_count"/>
+                <field name="weather"/>
+            </calendar>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_construction_diary_search" model="ir.ui.view">
+        <field name="name">construction.diary.search</field>
+        <field name="model">construction.diary</field>
+        <field name="arch" type="xml">
+            <search string="Градежен Дневник">
+                <field name="name"/>
+                <field name="task_id"/>
+                <field name="project_id"/>
+                <field name="date"/>
+                <filter string="Денешни" name="today" domain="[('date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="Оваа недела" name="this_week" domain="[('date', '&gt;=', (context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%Y-%m-%d'))]"/>
+                <filter string="Овој месец" name="this_month" domain="[('date', '&gt;=', context_today().strftime('%Y-%m-01'))]"/>
+                <separator/>
+                <filter string="Нацрт" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Потврдени" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter string="Одобрени" name="approved" domain="[('state', '=', 'approved')]"/>
+                <separator/>
+                <filter string="Со инциденти" name="incidents" domain="[('incidents', '=', True)]"/>
+                <filter string="Со инспекција" name="inspections" domain="[('inspection_performed', '=', True)]"/>
+                <separator/>
+                <group expand="0" string="Групирај по">
+                    <filter string="Работен налог" name="group_task" context="{'group_by': 'task_id'}"/>
+                    <filter string="Проект" name="group_project" context="{'group_by': 'project_id'}"/>
+                    <filter string="Датум" name="group_date" context="{'group_by': 'date'}"/>
+                    <filter string="Време" name="group_weather" context="{'group_by': 'weather'}"/>
+                    <filter string="Статус" name="group_state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_construction_diary" model="ir.actions.act_window">
+        <field name="name">Градежен Дневник</field>
+        <field name="res_model">construction.diary</field>
+        <field name="view_mode">list,form,calendar</field>
+        <field name="context">{}</field>
+        <field name="search_view_id" ref="view_construction_diary_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Креирај нов запис во градежен дневник
+            </p>
+            <p>
+                Градежниот дневник е задолжителен документ за секој градежен објект.
+                Тука се евидентираат дневните активности, работниците, материјалите и условите на работа.
+            </p>
+        </field>
+    </record>
+
+    <!-- Sequence -->
+    <record id="seq_construction_diary" model="ir.sequence">
+        <field name="name">Construction Diary Sequence</field>
+        <field name="code">construction.diary</field>
+        <field name="prefix">ГД-%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+    </record>
+
+</odoo>

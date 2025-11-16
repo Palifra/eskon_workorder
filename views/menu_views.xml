@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Main Menu -->
+    <menuitem id="menu_eskon_workorder_root"
+              name="Работни Налози"
+              sequence="45"
+              web_icon="eskon_workorder,static/description/icon.png"/>
+
+    <!-- Workorders Menu -->
+    <menuitem id="menu_workorder_main"
+              name="Работни Налози"
+              parent="menu_eskon_workorder_root"
+              sequence="10"/>
+
+    <menuitem id="menu_workorder_all"
+              name="Сите Налози"
+              parent="menu_workorder_main"
+              action="action_workorder_all"
+              sequence="10"/>
+
+    <!-- Quick Filters -->
+    <record id="action_workorder_today" model="ir.actions.act_window">
+        <field name="name">Денешни Налози</field>
+        <field name="res_model">project.task</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[
+            ('is_workorder', '=', True),
+            ('planned_start', '&gt;=', (context_today()).strftime('%Y-%m-%d 00:00:00')),
+            ('planned_start', '&lt;=', (context_today()).strftime('%Y-%m-%d 23:59:59'))
+        ]</field>
+        <field name="context">{'default_is_workorder': True}</field>
+        <field name="search_view_id" ref="view_workorder_search"/>
+    </record>
+
+    <menuitem id="menu_workorder_today"
+              name="Денешни"
+              parent="menu_workorder_main"
+              action="action_workorder_today"
+              sequence="20"/>
+
+    <record id="action_workorder_in_progress" model="ir.actions.act_window">
+        <field name="name">Во Тек</field>
+        <field name="res_model">project.task</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[
+            ('is_workorder', '=', True),
+            ('workorder_state', '=', 'in_progress')
+        ]</field>
+        <field name="context">{'default_is_workorder': True}</field>
+        <field name="search_view_id" ref="view_workorder_search"/>
+    </record>
+
+    <menuitem id="menu_workorder_in_progress"
+              name="Во Тек"
+              parent="menu_workorder_main"
+              action="action_workorder_in_progress"
+              sequence="30"/>
+
+    <record id="action_workorder_planned" model="ir.actions.act_window">
+        <field name="name">Планирани</field>
+        <field name="res_model">project.task</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[
+            ('is_workorder', '=', True),
+            ('workorder_state', '=', 'planned')
+        ]</field>
+        <field name="context">{'default_is_workorder': True}</field>
+        <field name="search_view_id" ref="view_workorder_search"/>
+    </record>
+
+    <menuitem id="menu_workorder_planned"
+              name="Планирани"
+              parent="menu_workorder_main"
+              action="action_workorder_planned"
+              sequence="40"/>
+
+    <!-- Construction Diary Menu -->
+    <menuitem id="menu_construction_diary_main"
+              name="Градежен Дневник"
+              parent="menu_eskon_workorder_root"
+              sequence="20"/>
+
+    <menuitem id="menu_construction_diary_all"
+              name="Сите Записи"
+              parent="menu_construction_diary_main"
+              action="action_construction_diary"
+              sequence="10"/>
+
+    <!-- Construction Book Menu -->
+    <menuitem id="menu_construction_book_main"
+              name="Градежни Книги"
+              parent="menu_eskon_workorder_root"
+              sequence="25"/>
+
+    <menuitem id="menu_construction_book_all"
+              name="Сите Книги"
+              parent="menu_construction_book_main"
+              action="action_construction_book"
+              sequence="10"/>
+
+    <!-- Configuration Menu (placeholder for future) -->
+    <menuitem id="menu_workorder_config"
+              name="Конфигурација"
+              parent="menu_eskon_workorder_root"
+              sequence="90"
+              groups="base.group_system"/>
+
+</odoo>

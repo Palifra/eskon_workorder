@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Paper Format for Construction Book Entry - No Header/Footer -->
+    <record id="paperformat_construction_book_entry" model="report.paperformat">
+        <field name="name">Градежна Книга (без header)</field>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">5</field>
+        <field name="margin_bottom">5</field>
+        <field name="margin_left">5</field>
+        <field name="margin_right">5</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <!-- Link Paper Format to Construction Book Entry Report -->
+    <record id="action_report_construction_book_entry" model="ir.actions.report">
+        <field name="paperformat_id" ref="paperformat_construction_book_entry"/>
+    </record>
+
+</odoo>

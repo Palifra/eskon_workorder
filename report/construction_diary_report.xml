@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Construction Diary Report Action -->
+    <record id="action_report_construction_diary" model="ir.actions.report">
+        <field name="name">Градежен Дневник</field>
+        <field name="model">construction.diary</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">eskon_workorder.report_construction_diary</field>
+        <field name="report_file">eskon_workorder.report_construction_diary</field>
+        <field name="binding_model_id" ref="model_construction_diary"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Construction Diary Template -->
+    <template id="report_construction_diary">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <div class="article" data-oe-model="construction.diary" t-att-data-oe-id="doc.id">
+                    <div class="page" style="margin: 0; padding: 15px;">
+                        <style>
+                            @page {
+                                margin: 1cm;
+                            }
+                            .diary-table {
+                                width: 100%;
+                                border-collapse: collapse;
+                                font-size: 11px;
+                            }
+                            .diary-table td, .diary-table th {
+                                border: 1px solid #000;
+                                padding: 5px;
+                                vertical-align: top;
+                            }
+                            .title-cell {
+                                font-weight: bold;
+                                text-align: center;
+                                font-size: 14px;
+                                background-color: #f0f0f0;
+                            }
+                            .section-header {
+                                background-color: #e0e0e0;
+                                font-weight: bold;
+                                text-align: center;
+                                font-size: 12px;
+                            }
+                            .notes-section {
+                                min-height: 180px;
+                                padding: 12px;
+                            }
+                            .signature-table {
+                                width: 100%;
+                            }
+                            .signature-table td {
+                                border: 1px solid #000;
+                                padding: 8px;
+                                text-align: center;
+                                height: 70px;
+                                font-size: 11px;
+                            }
+                        </style>
+
+                        <!-- Header Section -->
+                        <table class="diary-table">
+                            <tr>
+                                <td rowspan="2" class="title-cell" style="width: 12%;">
+                                    ГРАДЕЖЕН<br/>ДНЕВНИК
+                                </td>
+                                <td colspan="4">
+                                    <strong>изведувач:</strong> <t t-esc="doc.main_contractor"/><br/>
+                                    <t t-if="doc.subcontractor">
+                                        <strong>подизведувач:</strong> <t t-esc="doc.subcontractor"/>
+                                    </t>
+                                </td>
+                                <td style="width: 15%;">
+                                    <strong>книга бр.</strong> <t t-esc="doc.book_number"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="4">
+                                    <strong>градба:</strong> <t t-esc="doc.construction_name"/>
+                                </td>
+                                <td>
+                                    <strong>ден/датум:</strong><br/>
+                                    <t t-esc="doc.date" t-options='{"widget": "date", "format": "dd.MM.yyyy"}'/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><strong>инвеститор</strong></td>
+                                <td colspan="4"><t t-esc="doc.investor_name"/></td>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><strong>адреса и назив на градилиште</strong></td>
+                                <td colspan="4"><t t-esc="doc.site_address"/></td>
+                            </tr>
+                        </table>
+
+                        <!-- Work Time and Weather Section -->
+                        <table class="diary-table" style="margin-top: 10px;">
+                            <tr>
+                                <td rowspan="3" style="width: 12%;"><strong>раб. време</strong></td>
+                                <td colspan="3">
+                                    1.Смена од <t t-esc="'%02d:%02d' % (int(doc.shift1_start), int((doc.shift1_start % 1) * 60))"/>
+                                    до <t t-esc="'%02d:%02d' % (int(doc.shift1_end), int((doc.shift1_end % 1) * 60))"/>
+                                    вк: <t t-esc="doc.shift1_hours"/> часа
+                                </td>
+                                <td style="width: 18%;">
+                                    <strong>состојба на струјомер</strong><br/>
+                                    <t t-esc="doc.electricity_meter"/>
+                                </td>
+                                <td style="width: 18%;">
+                                    <strong>состојба на водомер</strong><br/>
+                                    <t t-esc="doc.water_meter"/>
+                                </td>
+                                <td style="width: 25%;" rowspan="3">
+                                    <strong>дневна температура</strong><br/>
+                                    мин. <t t-esc="doc.temperature_min"/> °C<br/>
+                                    макс. <t t-esc="doc.temperature_max"/> °C<br/>
+                                    <strong>временски услови</strong><br/>
+                                    <t t-if="doc.weather == 'sunny'">Сончево</t>
+                                    <t t-if="doc.weather == 'cloudy'">Облачно</t>
+                                    <t t-if="doc.weather == 'partly_cloudy'">Делумно облачно</t>
+                                    <t t-if="doc.weather == 'rainy'">Дождливо</t>
+                                    <t t-if="doc.weather == 'snowy'">Снежно</t>
+                                    <t t-if="doc.weather == 'windy'">Ветровито</t>
+                                    <t t-if="doc.weather == 'storm'">Невреме</t>
+                                    <t t-if="doc.weather == 'foggy'">Магливо</t>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="3">
+                                    2.Смена од <t t-esc="'%02d:%02d' % (int(doc.shift2_start), int((doc.shift2_start % 1) * 60))"/>
+                                    до <t t-esc="'%02d:%02d' % (int(doc.shift2_end), int((doc.shift2_end % 1) * 60))"/>
+                                    вк: <t t-esc="doc.shift2_hours"/> часа
+                                </td>
+                                <td colspan="2"/>
+                            </tr>
+                            <tr>
+                                <td colspan="3">
+                                    3.Смена од <t t-esc="'%02d:%02d' % (int(doc.shift3_start), int((doc.shift3_start % 1) * 60))"/>
+                                    до <t t-esc="'%02d:%02d' % (int(doc.shift3_end), int((doc.shift3_end % 1) * 60))"/>
+                                    вк: <t t-esc="doc.shift3_hours"/> часа
+                                </td>
+                                <td colspan="2"/>
+                            </tr>
+                        </table>
+
+                        <!-- Technical Resources Section -->
+                        <table class="diary-table" style="margin-top: 10px;">
+                            <tr>
+                                <td colspan="9" class="section-header">СТРУЧНА И ТЕХНИЧКА АНГАЖИРАНОСТ</td>
+                            </tr>
+                            <tr>
+                                <th rowspan="2" style="width: 12%;">работни лица</th>
+                                <th>квалификација</th>
+                                <th>број</th>
+                                <th rowspan="2" style="width: 12%;">транспортни средства</th>
+                                <th>вид</th>
+                                <th>бр.</th>
+                                <th rowspan="2" style="width: 12%;">градежни машини</th>
+                                <th>вид</th>
+                                <th>бр.</th>
+                            </tr>
+                            <tr>
+                                <td colspan="2"/>
+                                <td colspan="2"/>
+                                <td colspan="2"/>
+                            </tr>
+                            <!-- Worker Lines -->
+                            <t t-set="max_lines" t-value="max(len(doc.worker_line_ids), len(doc.vehicle_line_ids), len(doc.machine_line_ids), 3)"/>
+                            <t t-foreach="range(max_lines)" t-as="i">
+                                <tr>
+                                    <td t-if="i == 0" t-att-rowspan="max_lines">работни лица</td>
+                                    <td>
+                                        <t t-if="i &lt; len(doc.worker_line_ids)">
+                                            <t t-esc="doc.worker_line_ids[i].qualification"/>
+                                        </t>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <t t-if="i &lt; len(doc.worker_line_ids)">
+                                            <t t-esc="doc.worker_line_ids[i].count"/>
+                                        </t>
+                                    </td>
+                                    <td t-if="i == 0" t-att-rowspan="max_lines">транспортни средства</td>
+                                    <td>
+                                        <t t-if="i &lt; len(doc.vehicle_line_ids)">
+                                            <t t-esc="doc.vehicle_line_ids[i].vehicle_type"/>
+                                        </t>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <t t-if="i &lt; len(doc.vehicle_line_ids)">
+                                            <t t-esc="doc.vehicle_line_ids[i].count"/>
+                                        </t>
+                                    </td>
+                                    <td t-if="i == 0" t-att-rowspan="max_lines">градежни машини</td>
+                                    <td>
+                                        <t t-if="i &lt; len(doc.machine_line_ids)">
+                                            <t t-esc="doc.machine_line_ids[i].machine_type"/>
+                                        </t>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <t t-if="i &lt; len(doc.machine_line_ids)">
+                                            <t t-esc="doc.machine_line_ids[i].count"/>
+                                        </t>
+                                    </td>
+                                </tr>
+                            </t>
+                        </table>
+
+                        <!-- Contractor Notes -->
+                        <table class="diary-table" style="margin-top: 10px;">
+                            <tr>
+                                <td colspan="9" class="notes-section">
+                                    <strong>запис на изведувачот:</strong><br/>
+                                    <t t-raw="doc.contractor_notes or doc.work_description or ''"/>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Contractor Signatures -->
+                        <table class="signature-table" style="margin-top: 5px;">
+                            <tr>
+                                <td style="width: 33%;">
+                                    <strong>пополнил:</strong><br/>
+                                    (<t t-esc="doc.recorded_by_name"/>)
+                                </td>
+                                <td style="width: 34%;">
+                                    <strong>раководен инженер за изведба:</strong><br/>
+                                    (име, презиме и потпис)<br/>
+                                    <t t-esc="doc.construction_manager_name"/>
+                                </td>
+                                <td style="width: 33%;">
+                                    <strong>за инвеститор:</strong><br/>
+                                    (име, презиме и потпис)<br/>
+                                    <t t-esc="doc.investor_representative"/>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Supervision Notes -->
+                        <table class="diary-table" style="margin-top: 10px;">
+                            <tr>
+                                <td class="notes-section" style="min-height: 100px;">
+                                    <strong>запис на надзорен инженер, проектантски надзор и надлежен инспектор:</strong><br/>
+                                    <t t-esc="doc.supervision_notes"/>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Supervision Signatures -->
+                        <table class="signature-table" style="margin-top: 5px;">
+                            <tr>
+                                <td style="width: 33%;">
+                                    <strong>надзорен инженер</strong><br/>
+                                    (име, презиме и потпис)<br/>
+                                    <t t-esc="doc.supervision_engineer_name"/>
+                                </td>
+                                <td style="width: 34%;">
+                                    <strong>проектантски надзор</strong><br/>
+                                    (име, презиме и потпис)<br/>
+                                    <t t-esc="doc.designer_supervisor_name"/>
+                                </td>
+                                <td style="width: 33%;">
+                                    <strong>надлежен инспектор:</strong><br/>
+                                    (име, презиме и потпис)<br/>
+                                    <t t-esc="doc.inspector_name"/>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+</odoo>

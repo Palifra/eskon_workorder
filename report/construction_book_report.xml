@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Construction Book Report Action -->
+    <record id="action_report_construction_book" model="ir.actions.report">
+        <field name="name">Градежна Книга</field>
+        <field name="model">construction.book</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">eskon_workorder.report_construction_book</field>
+        <field name="report_file">eskon_workorder.report_construction_book</field>
+        <field name="binding_model_id" ref="model_construction_book"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Construction Book Template -->
+    <template id="report_construction_book">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <div class="article" data-oe-model="construction.book" t-att-data-oe-id="doc.id">
+                    <div class="page" style="margin: 0; padding: 20px;">
+                        <style>
+                            @page {
+                                margin: 1cm;
+                            }
+                            .book-title {
+                                text-align: center;
+                                font-size: 28px;
+                                font-weight: bold;
+                                margin: 50px 0;
+                            }
+                            .book-number {
+                                text-align: right;
+                                font-size: 16px;
+                                margin-bottom: 25px;
+                            }
+                            .section-title {
+                                font-weight: bold;
+                                background-color: #f0f0f0;
+                                padding: 10px;
+                                margin-top: 20px;
+                                font-size: 12px;
+                            }
+                            .field-label {
+                                font-weight: bold;
+                                width: 280px;
+                                font-size: 12px;
+                            }
+                            .field-value {
+                                border-bottom: 1px solid #000;
+                                padding: 5px;
+                                min-height: 25px;
+                                font-size: 12px;
+                            }
+                            .signature-box {
+                                border: 1px solid #000;
+                                height: 100px;
+                                margin-top: 15px;
+                            }
+                            table.info-table {
+                                width: 100%;
+                                border-collapse: collapse;
+                            }
+                            table.info-table td {
+                                padding: 8px;
+                                vertical-align: top;
+                                font-size: 12px;
+                            }
+                        </style>
+
+                        <div class="book-number">
+                            <strong>книга бр.</strong> <span t-field="doc.name"/>
+                        </div>
+
+                        <table class="info-table">
+                            <tr>
+                                <td class="field-label">назив на градба</td>
+                                <td class="field-value"><t t-esc="doc.construction_name"/></td>
+                                <td class="field-label">одобрение за градење (број и датум)</td>
+                                <td class="field-value">
+                                    <t t-if="doc.building_permit_number">
+                                        <t t-esc="doc.building_permit_number"/>
+                                        <t t-if="doc.building_permit_date">
+                                            / <t t-esc="doc.building_permit_date" t-options='{"widget": "date", "format": "dd.MM.yyyy"}'/>
+                                        </t>
+                                    </t>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="field-label">адреса на градба</td>
+                                <td class="field-value" colspan="3"><t t-esc="doc.construction_address"/></td>
+                            </tr>
+                            <tr>
+                                <td class="field-label">издадено од</td>
+                                <td class="field-value" colspan="3"><t t-esc="doc.issued_by"/></td>
+                            </tr>
+                        </table>
+
+                        <div class="book-title">
+                            ГРАДЕЖНА КНИГА
+                        </div>
+
+                        <table class="info-table">
+                            <!-- Инвеститор -->
+                            <tr>
+                                <td colspan="4" class="section-title">Инвеститор (име и презиме односно назив и седиште)</td>
+                            </tr>
+                            <tr>
+                                <td class="field-value" colspan="4">
+                                    <t t-if="doc.investor_name">
+                                        <span t-field="doc.investor_name"/>
+                                        <t t-if="doc.investor_address">
+                                            <br/><span t-field="doc.investor_address"/>
+                                        </t>
+                                    </t>
+                                </td>
+                            </tr>
+
+                            <!-- Проектант -->
+                            <tr>
+                                <td colspan="4" class="section-title">Проектант (назив на правно лице) / лиценца бр.</td>
+                            </tr>
+                            <tr>
+                                <td class="field-value" colspan="4">
+                                    <span t-field="doc.designer_company"/>
+                                    <t t-if="doc.designer_license">
+                                        / лиценца бр. <span t-field="doc.designer_license"/>
+                                    </t>
+                                </td>
+                            </tr>
+
+                            <!-- Главен проектант -->
+                            <tr>
+                                <td colspan="4" class="section-title">Главен проектант (име и презиме) / овластување бр.</td>
+                            </tr>
+                            <tr>
+                                <td class="field-value" colspan="4">
+                                    <span t-field="doc.chief_designer_name"/>
+                                    <t t-if="doc.chief_designer_authorization">
+                                        / овластување бр. <span t-field="doc.chief_designer_authorization"/>
+                                    </t>
+                                </td>
+                            </tr>
+
+                            <!-- Изведувач -->
+                            <tr>
+                                <td colspan="4" class="section-title">Изведувач (назив на правното лице) / лиценца бр.</td>
+                            </tr>
+                            <tr>
+                                <td class="field-value" colspan="4">
+                                    <span t-field="doc.contractor_company"/>
+                                    <t t-if="doc.contractor_license">
+                                        / лиценца бр. <span t-field="doc.contractor_license"/>
+                                    </t>
+                                </td>
+                            </tr>
+
+                            <!-- Инженер за изведба -->
+                            <tr>
+                                <td colspan="4" class="section-title">Инженер за изведба кој раководи со изградбата (име и презиме) / овластување бр.</td>
+                            </tr>
+                            <tr>
+                                <td class="field-value" colspan="4">
+                                    <span t-field="doc.construction_engineer_name"/>
+                                    <t t-if="doc.construction_engineer_authorization">
+                                        / овластување бр. <span t-field="doc.construction_engineer_authorization"/>
+                                    </t>
+                                </td>
+                            </tr>
+
+                            <!-- Надзор -->
+                            <tr>
+                                <td colspan="4" class="section-title">Надзор (назив на правно лице) / лиценца бр.</td>
+                            </tr>
+                            <tr>
+                                <td class="field-value" colspan="4">
+                                    <span t-field="doc.supervision_company"/>
+                                    <t t-if="doc.supervision_license">
+                                        / лиценца бр. <span t-field="doc.supervision_license"/>
+                                    </t>
+                                </td>
+                            </tr>
+
+                            <!-- Надзорен инженер -->
+                            <tr>
+                                <td colspan="4" class="section-title">Надзорен инженер (име и презиме) / овластување бр.</td>
+                            </tr>
+                            <tr>
+                                <td class="field-value" colspan="4">
+                                    <span t-field="doc.supervision_engineer_name"/>
+                                    <t t-if="doc.supervision_engineer_authorization">
+                                        / овластување бр. <span t-field="doc.supervision_engineer_authorization"/>
+                                    </t>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Датуми -->
+                        <table class="info-table" style="margin-top: 30px;">
+                            <tr>
+                                <td style="width: 50%;">
+                                    <strong>Датум на почеток на изградбата</strong><br/>
+                                    <div class="field-value" t-field="doc.construction_start_date" t-options='{"format": "dd.MM.yyyy"}'/>
+                                </td>
+                                <td style="width: 50%;">
+                                    <strong>Датум на завршеток / период на изградба</strong><br/>
+                                    <div class="field-value">
+                                        <t t-if="doc.construction_end_date">
+                                            <span t-field="doc.construction_end_date" t-options='{"format": "dd.MM.yyyy"}'/>
+                                        </t>
+                                        <t t-if="doc.construction_period">
+                                            / <span t-field="doc.construction_period"/>
+                                        </t>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+</odoo>
